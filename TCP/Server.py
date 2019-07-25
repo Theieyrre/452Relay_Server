@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import socket
-import os
 
 host = "localhost"
 portA = 3333
@@ -17,6 +16,7 @@ except socket.error as message:
     print("Bind failed with error ", message[1])
 
 # Set maximum client for this socket
+print("Waiting for packages for A")
 socket_for_a.listen(1)
 
 # Bind to socket_for_b
@@ -28,13 +28,16 @@ except socket.error as message:
 
 # Set maximum client for this socket wait for data
 socket_for_b.listen(1)
-connectionB, addressB = socket_for_b.accept()
-print("Connected with ", portB)
+print("Waiting for packages for B")
+
 connectionA, addressA = socket_for_a.accept()
 print("Connected with ", portA)
+connectionB, addressB = socket_for_b.accept()
+print("Connected with ", portB)
+
 
 # Receive data from A and send data to B
-total_sent = 0
+total_sent = b""
 total_received = 0
 while True:
     data = connectionA.recv(2048)

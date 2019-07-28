@@ -1,27 +1,44 @@
-import socket
-import select
+from socket import *
 
-UDP_IP = "127.0.0.1"
-IN_PORT = 5005
-timeout = 3
+host = "0.0.0.0"
+port = 9999
+s = socket(AF_INET, SOCK_DGRAM)
+s.bind((host, port))
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind((UDP_IP, IN_PORT))
+addr = (host, port)
+buf = 1024
 
-while True:
-    data, addr = sock.recvfrom(1024)
-    if data:
-        print("File name:", data)
-        file_name = data.strip()
+f = open("10mb2.ppt", 'wb')
 
-    file = open(file_name, 'wb')
+data, addr = s.recvfrom(buf)
+try:
+    while (data):
+        f.write(data)
+        s.settimeout(2)
+        data, addr = s.recvfrom(buf)
+except timeout:
+    f.close()
+    s.close()
 
-    while True:
-        ready = select.select([sock], [], [], timeout)
-        if ready[0]:
-            data, addr = sock.recvfrom(1024)
-            file.write(data)
-        else:
-            print("%s Finish!" % file_name)
-            file.close()
-            break
+
+
+
+sB = socket(AF_INET, SOCK_DGRAM)
+hostB = "0.0.0.0"
+portB = 5000
+bufB = 1024
+addrB = (hostB, portB)
+
+file_nameB = "10mb2.ppt"
+
+fB = open(file_nameB, "rb")
+dataB = fB.read(bufB)
+
+sB.sendto(file_nameB.encode(), addrB)
+sB.sendto(dataB, addrB)
+while (dataB):
+    if (sB.sendto(dataB, addrB)):
+        print("server send to receiver...")
+        dataB = fB.read(bufB)
+sB.close()
+fB.close()

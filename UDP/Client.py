@@ -1,22 +1,21 @@
-import socket
-import time
-import sys
+from socket import *
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
+s = socket(AF_INET, SOCK_DGRAM)
+host = "0.0.0.0"
+port = 9999
 buf = 1024
-file_name = "deneme.txt"
+addr = (host, port)
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.sendto(file_name.encode(), (UDP_IP, UDP_PORT))
-print("Sending %s ..." % file_name)
+file_name = "10mb.ppt"
 
-file = open(file_name, "r")
-data = file.read(buf)
+f = open(file_name, "rb")
+data = f.read(buf)
+
+s.sendto(file_name.encode(), addr)
+s.sendto(data, addr)
 while (data):
-    if (sock.sendto(data.encode(), (UDP_IP, UDP_PORT))):
-        data = file.read(buf)
-        time.sleep(0.02)  # Give receiver a bit time to save
-
-sock.close()
-file.close()
+    if (s.sendto(data, addr)):
+        print("client send to server...")
+        data = f.read(buf)
+s.close()
+f.close()

@@ -80,7 +80,6 @@ package_count = len(total_received) / package_size
 while count_sent < package_count:
     package_B = tcppacket.TCPPacket(4444,sequence_B, expected_B)
     data_to_send = total_received[index:package_size+index]
-    print(data_to_send)
     packet_B = package_B.create_packet(data_to_send)
     sent_data = connectionB.send(packet_B)
     index += 1
@@ -88,12 +87,17 @@ while count_sent < package_count:
     response = connectionB.recv(10)
     opened = package_B.open_packet(response)
     expected_B == opened[0][2] -1
+    print(expected_B," ",sequence_B)
     # Sent to B true
     if expected_B == sequence_B:
-         total_sent += sent_data
-         count_sent += 1
-         sequence_A = opened[0][2]
+        total_sent += sent_data
+        count_sent += 1
+        sequence_A = opened[0][2]
     # Sent to B false
     else:
          connectionB.send(packet_B)
+
+package_end = tcppacket.TCPPacket(3333,sequence_B,expected_B)
+packet_end = package_end.create_packet(b"closethestream")
+connectionB.send(packet_end)         
 

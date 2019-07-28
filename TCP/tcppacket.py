@@ -4,6 +4,7 @@ import socket
 # For checksum
 import hashlib
 import struct
+import random
 
 class TCPPacket:
     def __init__(self, port_src, sequence, ack):
@@ -29,3 +30,20 @@ class TCPPacket:
         # return tuple
         return header, data;
 
+    def hash(self,data):
+        checksum = hashlib.sha3_256(data)
+        return checksum.digest()
+
+    def check(self,hashed,data):
+        checksum = hashlib.sha3_256(data)
+        if hashed == checksum.digest():
+            return True
+        else:
+            return False
+
+    def error(self,data,p):
+        # 1/p chance to be 1
+        for b in data:
+            if random.randint(1,p) == 1:
+                data[b] = not b
+        return data

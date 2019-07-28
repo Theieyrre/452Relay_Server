@@ -91,13 +91,13 @@ while True:
             break
       sequence_B = header[0][1]
             # if received successfully
-      print(sequence_B," ",expected_B)
-      if sequence_B == expected_B :
+      if sequence_B == expected_B:
+            print("here")
             total_received += header[1]
             # Send ack
+            expected_B += 1
             packet_B = package_next_B.create_packet(b"")
             receiver.send(packet_B)
-            expected_B += 1
       else:
             packet_B = package_resend_B.create_packet(b"")
             receiver.send(packet_B)

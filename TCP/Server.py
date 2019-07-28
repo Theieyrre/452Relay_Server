@@ -53,6 +53,7 @@ while True:
     header = package_next_A.open_packet(data)
     if header[1] == b"closethestream":
         break
+    print(header[0])
     # Second index of tuple is sequence number
     sequence_A = header[0][1]
     # Received from A true
@@ -69,27 +70,30 @@ while True:
         connectionA.send(packet)
 
 # Send data to B
-total_sent = b""
+count_sent = 0
+total_sent = 0
 sequence_B = 0
 expected_B = 0
 index = 0
-while True:
-    package_next_B = tcppacket.TCPPacket(4444,sequence_B, expected_B+1)
-    package_resend_B = tcppacket.TCPPacket(4444,sequence_B, expected_B)
+package_count = len(total_received) / package_size
+
+while count_sent < package_count:
+    package_B = tcppacket.TCPPacket(4444,sequence_B, expected_B)
     data_to_send = total_received[index:package_size+index]
-    packet_B = package_next_B.create_packet(data_to_send)
-    connectionB.send(packet_B)
+    print(data_to_send)
+    packet_B = package_B.create_packet(data_to_send)
+    sent_data = connectionB.send(packet_B)
+    index += 1
     # Get response
     response = connectionB.recv(10)
-    opened = package_next_B.open_packet(response)
-    sequence_B == opened[0][1]
+    opened = package_B.open_packet(response)
+    expected_B == opened[0][2] -1
     # Sent to B true
-    if sequence_B == expected_B:
-         total_sent += opened[1]
-         packet_B = package_next_B.create_packet(b"")
-         connectionB.send(packet_B)
+    if expected_B == sequence_B:
+         total_sent += sent_data
+         count_sent += 1
+         sequence_A = opened[0][2]
     # Sent to B false
     else:
-         packet_B = package_resend_B.create_packet(header[1])
          connectionB.send(packet_B)
 

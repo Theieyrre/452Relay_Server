@@ -77,28 +77,29 @@ sender.send(packet_end)
 filename = "Chapter_6_V6.1.ppt"
 file = open(filename, 'wb+')
 
-count_received = 0
 total_received = b""
 sequence_B = 0
 expected_B = 0
+start_time = time.time()
+
 while True:
-      package_B = tcppacket.TCPPacket(4444,sequence_B,expected_B)
       received_data = receiver.recv(package_size+10)
-      data = package_B.open_packet(received_data)
-      if data==None:
+      package_next_B = tcppacket.TCPPacket(4444,sequence_B,expected_B+1)
+      package_resend_B = tcppacket.TCPPacket(4444,sequence_B,expected_B)
+      header = package_next_B.open_packet(received_data)
+      if header[1]==b"closethestream":
             break
-      # if received successfully
-      if expected_B == data[0][1]:
-            total_received += data[1]
-            # increasing by one insted of the size
-            expected_B += 1
-            sequence_B = data[0][1]
+      sequence_B = header[0][1]
+            # if received successfully
+      print(sequence_B," ",expected_B)
+      if sequence_B == expected_B :
+            total_received += header[1]
             # Send ack
-            package_next = tcppacket.TCPPacket(4444,sequence_B,expected_B)
-            packet_B = package_next.create_packet(b"")
+            packet_B = package_next_B.create_packet(b"")
             receiver.send(packet_B)
+            expected_B += 1
       else:
-            packet_B = package_B.create_packet(b"")
+            packet_B = package_resend_B.create_packet(b"")
             receiver.send(packet_B)
             
 file = file.write(total_received)

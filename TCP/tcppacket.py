@@ -21,6 +21,7 @@ class TCPPacket:
         return header+data
     
     def open_packet(self,packet):
+        print(len(packet))
         # Only unpack 10 bytes
         header = struct.unpack_from("!HLL",packet[0:10])
         # Remainder is already in bytes

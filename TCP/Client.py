@@ -44,71 +44,72 @@ print("Package count ",package_count)
 
 count_sent = 0
 total_sent = 0
-sequence = 0
-expected = 0
+sequence_A = 0
+expected_A = 0
+
 start_time = time.time()
 while count_sent < package_count:
-    try:
         file_data = file.read(package_size)
-        package = tcppacket.TCPPacket(3333,sequence,expected)
-        packet = package.create_packet(file_data)
-        sent_data = sender.send(packet)
+        package_A = tcppacket.TCPPacket(3333,sequence_A,expected_A)
+        packet_A = package_A.create_packet(file_data)
+        sent_data = sender.send(packet_A)
         # Get response
         response = sender.recv(10)
-        opened = package.open_packet(response)
-        expected = opened[0][1]
+        opened = package_A.open_packet(response)
+        expected_A = opened[0][2] - 1
         # if package is successfully sent
-        if expected == sequence:
-            print(sequence, " sent successfully")
+        if expected_A == sequence_A:
             total_sent += sent_data
             count_sent += 1
             # Set sequence to ack received
-            sequence = opened[0][2]
+            sequence_A = opened[0][2]
         # else resend it one more
         else:
-            print("resend")
-            sender.send(packet)
-    except:
-       print(sys.exc_info()[1])
-       
-elapsed = time.time() - start_time   
-if total_sent == os.stat(filename).st_size:
-    after_time = time.time()
-    print("Successfully sent all data in ",elapsed," seconds")
-else:
-    print("Process ended in ",elapsed," seconds")
-    print(total_sent - sent_data, " bytes could not sent")
+            sender.send(packet_A)
+            
+print("Ended in ", time.time()-start_time," seconds")
 
+# Notify server with "fin" message
+package_end = tcppacket.TCPPacket(3333,sequence_A,expected_A)
+packet_end = package_end.create_packet(b"closethestream")
+sender.send(packet_end)
 
-# Different version to check new file
 filename = "Chapter_6_V6.1.ppt"
 file = open(filename, 'wb+')
 
-# Receive file
 count_received = 0
-total_received = 0
-sequence = 0
-expected = 0
-start_time = time.time()
-while count_received < count_sent:
-    package = tcppacket.TCPPacket(4444,sequence,expected)
-    received_data = receiver.recv(package_size+10)
-    header = package.open_package(received_data)
-    print(header)
-    if expected == header[0][1]:
-        total_received += header[1]
-        # increasing by one insted of the size
-        expected += 1
-        sequence = header[0][1]
-        package_next = tcppacket.TCPPacket(4444,sequence,expected)
-        packet = package_next.create_packet(b"")
-        receiver.send(packet)
-    else:
-        packet = package.create_packet(b"")
-        receiver.send(packet)
-    
-file = file.write(receivedData)
-print("Successfully created received data")
+total_received = b""
+sequence_B = 0
+expected_B = 0
+while True:
+      package_B = tcppacket.TCPPacket(4444,sequence_B,expected_B)
+      received_data = receiver.recv(package_size+10)
+      data = package_B.open_packet(received_data)
+      if data==None:
+            break
+      # if received successfully
+      if expected_B == data[0][1]:
+            total_received += data[1]
+            # increasing by one insted of the size
+            expected_B += 1
+            sequence_B = data[0][1]
+            # Send ack
+            package_next = tcppacket.TCPPacket(4444,sequence_B,expected_B)
+            packet_B = package_next.create_packet(b"")
+            receiver.send(packet_B)
+      else:
+            packet_B = package_B.create_packet(b"")
+            receiver.send(packet_B)
+            
+file = file.write(total_received)
+
+elapsed = time.time() - start_time   
+if total_sent == os.stat(filename).st_size:
+     after_time = time.time()
+     print("Successfully sent all data in ",elapsed," seconds")
+else:
+    print("Process ended in ",elapsed," seconds")
+    print(total_sent - sent_data, " bytes could not sent")
 
 sender.close()
 receiver.close()
